@@ -44,7 +44,8 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 
     Aggregation aggregation = Aggregation.newAggregation(match, group);
 
-    AggregationResults<Document> results = template.aggregate(aggregation, "payments", Document.class);
+    AggregationResults<Document> results = template.aggregate(aggregation, "payments",
+        Document.class);
 
     Document result = results.getUniqueMappedResult();
 

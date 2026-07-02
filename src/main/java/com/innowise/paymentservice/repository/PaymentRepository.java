@@ -8,7 +8,8 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PaymentRepository extends MongoRepository<Payment, String>, PaymentRepositoryCustom {
+public interface PaymentRepository extends MongoRepository<Payment, String>,
+    PaymentRepositoryCustom {
 
   @Query("""
       {

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 public class PaymentDao {
+
   private final PaymentRepository repository;
 
   public Payment save(Payment payment) {
