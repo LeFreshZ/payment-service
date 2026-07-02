@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Slf4j
 @Component
 public class RandomNumberClient {
+
   private final WebClient webClient;
 
   public RandomNumberClient(
