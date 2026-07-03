@@ -2,11 +2,13 @@ package com.innowise.paymentservice.service.implementation;
 
 import com.innowise.paymentservice.dao.PaymentDao;
 import com.innowise.paymentservice.dto.CreatePaymentRequest;
+import com.innowise.paymentservice.dto.PaymentCompletedEvent;
 import com.innowise.paymentservice.dto.PaymentResponse;
 import com.innowise.paymentservice.dto.PaymentSummaryResponse;
 import com.innowise.paymentservice.entity.Payment;
 import com.innowise.paymentservice.entity.enums.PaymentStatus;
 import com.innowise.paymentservice.exception.PaymentNotFoundException;
+import com.innowise.paymentservice.kafka.PaymentEventProducer;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.service.PaymentService;
 import java.time.Instant;
@@ -23,6 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
   private final PaymentDao dao;
   private final PaymentMapper mapper;
   private final RandomNumberClient randomNumberClient;
+  private final PaymentEventProducer producer;
 
   @Override
   public PaymentResponse createPayment(CreatePaymentRequest request, Long userId) {
@@ -41,6 +44,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     savedPayment.setStatus(finalStatus);
     Payment updatedPayment = dao.save(savedPayment);
+
+    producer.sendPaymentEvent(new PaymentCompletedEvent(updatedPayment.getOrderId(), finalStatus));
 
     return mapper.toResponse(updatedPayment);
   }
