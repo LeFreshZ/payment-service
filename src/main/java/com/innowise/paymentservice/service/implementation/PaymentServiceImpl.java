@@ -25,7 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
   private final PaymentDao dao;
   private final PaymentMapper mapper;
   private final RandomNumberClient randomNumberClient;
-  private final PaymentEventProducer producer;
+  private final PaymentEventProducer eventProducer;
 
   @Override
   public PaymentResponse createPayment(CreatePaymentRequest request, Long userId) {
@@ -45,7 +45,7 @@ public class PaymentServiceImpl implements PaymentService {
     savedPayment.setStatus(finalStatus);
     Payment updatedPayment = dao.save(savedPayment);
 
-    producer.sendPaymentEvent(new PaymentCompletedEvent(updatedPayment.getOrderId(), finalStatus));
+    eventProducer.sendPaymentEvent(new PaymentCompletedEvent(updatedPayment.getOrderId(), finalStatus));
 
     return mapper.toResponse(updatedPayment);
   }
