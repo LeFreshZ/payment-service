@@ -45,7 +45,8 @@ public class PaymentServiceImpl implements PaymentService {
     savedPayment.setStatus(finalStatus);
     Payment updatedPayment = dao.save(savedPayment);
 
-    eventProducer.sendPaymentEvent(new PaymentCompletedEvent(updatedPayment.getOrderId(), finalStatus));
+    eventProducer.sendPaymentEvent(
+        new PaymentCompletedEvent(updatedPayment.getOrderId(), finalStatus));
 
     return mapper.toResponse(updatedPayment);
   }

@@ -64,7 +64,7 @@ public class PaymentController {
       Authentication authentication
   ) {
 
-    long currentUserId = Long.parseLong(authentication.getName());
+    Long currentUserId = Long.parseLong(authentication.getName());
     boolean isAdmin = authentication.getAuthorities().stream()
         .anyMatch(a -> a.getAuthority().equals(ADMIN_ROLE_NAME));
 
