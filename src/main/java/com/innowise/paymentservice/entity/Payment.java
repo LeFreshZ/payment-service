@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 @Document(collection = "payments")
 @Getter
@@ -31,6 +32,6 @@ public class Payment {
 
   private Instant time;
 
-  @Field("payment_amount")
+  @Field(value = "payment_amount", targetType = FieldType.DECIMAL128)
   private BigDecimal paymentAmount;
 }
