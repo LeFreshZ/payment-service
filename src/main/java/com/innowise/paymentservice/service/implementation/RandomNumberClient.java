@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class RandomNumberClient {
 
   private final WebClient webClient;
+  private final Random rnd = new Random();
 
   public RandomNumberClient(
       WebClient.Builder builder,
@@ -39,8 +40,6 @@ public class RandomNumberClient {
       return Integer.parseInt(response.trim());
     } catch (Exception ex) {
       log.warn("Random API unavailable, using fallback: {}", ex.getMessage());
-
-      Random rnd = new Random();
 
       return rnd.nextInt(1, 1000);
     }
