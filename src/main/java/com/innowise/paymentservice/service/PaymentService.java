@@ -4,6 +4,7 @@ import com.innowise.paymentservice.dto.CreatePaymentRequest;
 import com.innowise.paymentservice.dto.PaymentResponse;
 import com.innowise.paymentservice.dto.PaymentSummaryResponse;
 import com.innowise.paymentservice.entity.enums.PaymentStatus;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -17,32 +18,34 @@ import java.util.List;
 public interface PaymentService {
 
   /**
-   * Initiates a new payment for the authenticated user.
-   *
-   * <p>Extracts user_id from JWT context, saves payment with PENDING status,
-   * then asynchronously calls external random number API to determine final status (SUCCESS if
-   * even, FAILED if odd).
+   * Initiates a new payment via REST API for the authenticated user.
    *
    * @param request DTO containing order_id and payment_amount
    * @param userId  ID of the authenticated user extracted from JWT
-   * @return created payment as {@link PaymentResponse} with PENDING status
+   * @return created payment as {@link PaymentResponse}
    */
   PaymentResponse createPayment(CreatePaymentRequest request, Long userId);
 
   /**
-   * Retrieves a payment by its unique identifier.
+   * Processes a payment triggered by an order creation event from Kafka.
    *
-   * <p>If called by USER role, verifies that the payment belongs to them.
+   * <p>Creates a payment for the given order, calls external random number API
+   * to determine final status, saves the result and publishes PAYMENT_COMPLETED event.
+   *
+   * @param orderId    ID of the order from CREATE_ORDER event
+   * @param userId     ID of the user who created the order
+   * @param totalPrice total amount to charge
+   */
+  void processOrderPayment(Long orderId, Long userId, BigDecimal totalPrice);
+
+  /**
+   * Retrieves a payment by its unique identifier.
    *
    * @param id      unique identifier of the payment
    * @param userId  ID of the authenticated user extracted from JWT
    * @param isAdmin true if the requesting user has ADMIN role
    * @return found payment as {@link PaymentResponse}
-   * @throws com.innowise.paymentservice.exception.PaymentNotFoundException     if payment not
-   *                                                                            found
-   * @throws com.innowise.paymentservice.exception.PaymentAccessDeniedException if USER tries to
-   *                                                                            access another
-   *                                                                            user's payment
+   * @throws com.innowise.paymentservice.exception.PaymentNotFoundException     if not found
    */
   PaymentResponse getPaymentById(String id, Long userId, boolean isAdmin);
 
@@ -51,7 +54,7 @@ public interface PaymentService {
    *
    * <p>For USER role, userId filter is always overridden with the authenticated user's ID.
    *
-   * @param userId  optional filter by user_id (overridden for USER role)
+   * @param userId  optional filter by user_id
    * @param orderId optional filter by order_id
    * @param status  optional filter by payment status
    * @return list of matching payments as {@link PaymentResponse}

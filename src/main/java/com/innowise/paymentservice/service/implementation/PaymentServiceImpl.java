@@ -11,6 +11,7 @@ import com.innowise.paymentservice.exception.PaymentNotFoundException;
 import com.innowise.paymentservice.kafka.PaymentEventProducer;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.service.PaymentService;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -25,19 +26,33 @@ public class PaymentServiceImpl implements PaymentService {
   private final PaymentDao dao;
   private final PaymentMapper mapper;
   private final RandomNumberClient randomNumberClient;
-  private final PaymentEventProducer eventProducer;
+  private final PaymentEventProducer producer;
 
   @Override
   public PaymentResponse createPayment(CreatePaymentRequest request, Long userId) {
     Payment payment = mapper.toEntity(request);
     payment.setUserId(userId);
+
+    return mapper.toResponse(processPayment(payment));
+  }
+
+  @Override
+  public void processOrderPayment(Long orderId, Long userId, BigDecimal totalPrice) {
+    Payment payment = new Payment();
+    payment.setOrderId(orderId);
+    payment.setUserId(userId);
+    payment.setPaymentAmount(totalPrice);
+
+    processPayment(payment);
+  }
+
+  private Payment processPayment(Payment payment) {
     payment.setStatus(PaymentStatus.PENDING);
     payment.setTime(Instant.now());
 
     Payment savedPayment = dao.save(payment);
 
     int randomNumber = randomNumberClient.getRandomNumber();
-
     PaymentStatus finalStatus = randomNumber % 2 == 0
         ? PaymentStatus.SUCCESS
         : PaymentStatus.FAILED;
@@ -45,10 +60,12 @@ public class PaymentServiceImpl implements PaymentService {
     savedPayment.setStatus(finalStatus);
     Payment updatedPayment = dao.save(savedPayment);
 
-    eventProducer.sendPaymentEvent(
-        new PaymentCompletedEvent(updatedPayment.getOrderId(), finalStatus));
+    producer.sendPaymentEvent(new PaymentCompletedEvent(
+        updatedPayment.getOrderId(),
+        finalStatus
+    ));
 
-    return mapper.toResponse(updatedPayment);
+    return updatedPayment;
   }
 
   @Override
